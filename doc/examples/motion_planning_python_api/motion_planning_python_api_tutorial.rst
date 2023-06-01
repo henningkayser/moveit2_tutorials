@@ -389,13 +389,13 @@ Setup
 
   git clone https://github.com/henningkayser/moveit2_tutorials.git -b panda_gz --depth 1 --single-branch
 
-3. Switch to the following directory inside the Python Tutorials.
+2. Switch to the following directory inside the Python Tutorials.
 
 .. code-block:: bash
 
   cd moveit2_tutorials/doc/examples/motion_planning_python_api/docker-gazebo/
 
-4. Build the Docker image.
+3. Build the Docker image.
 
 .. code-block:: bash
 
