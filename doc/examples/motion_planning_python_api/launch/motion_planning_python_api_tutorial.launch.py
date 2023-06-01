@@ -64,6 +64,10 @@ def generate_launch_description():
         description="Python API tutorial file name",
     )
 
+    # NOTE: moveit_py only supports a single temporary parameter file,
+    # so we merge the dicts here
+    moveit_config_dict = moveit_config.to_dict()
+    moveit_config_dict.update({"use_sim_time": use_sim_time})
     moveit_py_node = Node(
         name="moveit_py",
         package="moveit2_tutorials",
@@ -74,8 +78,7 @@ def generate_launch_description():
             "--log-level",
             "fatal",
         ],  # MoveIt is spamming the log because of unknown '*_mimic' joints
-        parameters=[moveit_config.to_dict(),
-                    {"use_sim_time": use_sim_time}],
+        parameters=[moveit_config_dict],
     )
 
     rviz_config_file = os.path.join(
