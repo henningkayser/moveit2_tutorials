@@ -408,10 +408,10 @@ Run MoveIt
 
 The Docker image provides multiple service targets for trying out MoveIt and this Python tutorial with and without Gazebo simulation.
 
-* python_gazebo: Runs this tutorial with RViz and a Gazebo simulation
-* python_mock_components: Runs this tutorial with RViz and mock hardware
-* demo_gazebo: Runs a Panda MoveGroup with RViz and a Gazebo simulation
-* demo_mock_components: Runs a Panda MoveGroup with RViz and mock hardware
+* **python_gazebo**: Runs this tutorial with RViz and a Gazebo simulation
+* **python_mock_components**: Runs this tutorial with RViz and mock hardware
+* **demo_gazebo**: Runs a Panda MoveGroup with RViz and a Gazebo simulation
+* **demo_mock_components**: Runs a Panda MoveGroup with RViz and mock hardware
 
 You can run these service targets like this:
 
