@@ -372,4 +372,52 @@ For example ::
                         "panda_arm",
                         original_joint_positions,
                 )
-                robot_state.update()  # required to update transforms
+                robot_state.update()  # required to update transforms 
+
+
+Running the Tutorial in a Gazebo Simulation
+===========================================
+
+The tutorial includes a Docker Compose setup for running the Panda robot in a Gazebo Simulation without having to install any further dependencies on the Host system.
+The 
+
+
+Setup
+-----
+
+1. Perform a shallow clone of the MoveIt 2 Tutorials repo.
+
+.. code-block:: bash
+
+  git clone https://github.com/henningkayser/moveit2_tutorials.git -b panda_gz --depth 1 --single-branch
+
+3. Switch to the following directory inside the Python Tutorials.
+
+.. code-block:: bash
+
+  cd moveit2_tutorials/doc/examples/motion_planning_python_api/docker-gazebo/
+
+4. Build the Docker image.
+
+.. code-block:: bash
+
+  docker compose build base
+  
+Run MoveIt
+----------
+
+The Docker image provides multiple service targets for trying out MoveIt and this Python tutorial with and without Gazebo simulation.
+
+* python_gazebo: Runs this tutorial with RViz and a Gazebo simulation
+* python_mock_components: Runs this tutorial with RViz and mock hardware
+* demo_gazebo: Runs a Panda MoveGroup with RViz and a Gazebo simulation
+* demo_mock_components: Runs a Panda MoveGroup with RViz and mock hardware
+
+You can run these service targets like this:
+
+.. code-block:: bash
+
+  docker compose up demo_gazebo
+
+All targets are available with the optional postfix ``*_gpu`` which might be required depending on the installed System, GPU Vendor and drivers. 
+               
