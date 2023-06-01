@@ -379,8 +379,6 @@ Running the Tutorial in a Gazebo Simulation
 ===========================================
 
 The tutorial includes a Docker Compose setup for running the Panda robot in a Gazebo Simulation without having to install any further dependencies on the Host system.
-The 
-
 
 Setup
 -----
