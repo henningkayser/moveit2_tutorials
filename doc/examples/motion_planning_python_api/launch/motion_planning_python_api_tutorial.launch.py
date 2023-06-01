@@ -5,17 +5,51 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
-from launch.actions import DeclareLaunchArgument, ExecuteProcess
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription
+from launch.conditions import (
+    IfCondition,
+    UnlessCondition,
+    LaunchConfigurationNotEquals,
+    LaunchConfigurationEquals,
+)
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from moveit_configs_utils import MoveItConfigsBuilder
 
 
 def generate_launch_description():
+    ros2_control_hardware_type = DeclareLaunchArgument(
+        "ros2_control_hardware_type",
+        default_value="mock_components",
+        description="ROS2 control hardware interface type to use for the launch file",
+        choices=["mock_components", "isaac", "sim_ignition"],
+    )
+
+    declare_initial_positions_file = DeclareLaunchArgument(
+        "initial_positions_file",
+        default_value="initial_positions.yaml",
+        description="Initial joint positions to use for ros2_control fake components and simulation -- expected to be a yaml file inside the config directory",
+    )
+
+    use_sim_time = LaunchConfiguration("use_sim_time")
+    declare_use_sim_time_cmd = DeclareLaunchArgument(
+        "use_sim_time",
+        default_value="False",
+        description="Use simulation (Gazebo) clock if True",
+    )
+
     moveit_config = (
         MoveItConfigsBuilder(
             robot_name="panda", package_name="moveit_resources_panda_moveit_config"
         )
-        .robot_description(file_path="config/panda.urdf.xacro")
+        .planning_scene_monitor(publish_robot_description=True)
+        .robot_description(file_path="config/panda.urdf.xacro",
+                           mappings={
+                               "ros2_control_hardware_type": LaunchConfiguration(
+                                   "ros2_control_hardware_type"
+                               ),
+                               "initial_positions_file": LaunchConfiguration("initial_positions_file"),
+                           },)
         .trajectory_execution(file_path="config/gripper_moveit_controllers.yaml")
         .moveit_cpp(
             file_path=get_package_share_directory("moveit2_tutorials")
@@ -35,7 +69,13 @@ def generate_launch_description():
         package="moveit2_tutorials",
         executable=LaunchConfiguration("example_file"),
         output="both",
-        parameters=[moveit_config.to_dict()],
+        arguments=[
+            "--ros-args",
+            "--log-level",
+            "fatal",
+        ],  # MoveIt is spamming the log because of unknown '*_mimic' joints
+        parameters=[moveit_config.to_dict(),
+                    {"use_sim_time": use_sim_time}],
     )
 
     rviz_config_file = os.path.join(
@@ -53,6 +93,8 @@ def generate_launch_description():
         parameters=[
             moveit_config.robot_description,
             moveit_config.robot_description_semantic,
+            moveit_config.robot_description_kinematics,
+            {"use_sim_time": use_sim_time},
         ],
     )
 
@@ -61,6 +103,7 @@ def generate_launch_description():
         executable="static_transform_publisher",
         name="static_transform_publisher",
         output="log",
+        parameters=[{"use_sim_time": use_sim_time}],
         arguments=["0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "world", "panda_link0"],
     )
 
@@ -69,7 +112,7 @@ def generate_launch_description():
         executable="robot_state_publisher",
         name="robot_state_publisher",
         output="log",
-        parameters=[moveit_config.robot_description],
+        parameters=[moveit_config.robot_description, {"use_sim_time": use_sim_time}],
     )
 
     ros2_controllers_path = os.path.join(
@@ -82,17 +125,48 @@ def generate_launch_description():
         executable="ros2_control_node",
         parameters=[moveit_config.robot_description, ros2_controllers_path],
         output="log",
+        condition=LaunchConfigurationNotEquals(
+            "ros2_control_hardware_type", "sim_ignition"
+        ),
+    )
+
+    ignition_spawn_entity = Node(
+        package="ros_gz_sim",
+        executable="create",
+        output="log",
+        arguments=[
+            "-topic",
+            "robot_description",
+            "-name",
+            "panda",
+            "-allow-renaming",
+            "true",
+        ],
+        condition=LaunchConfigurationEquals(
+            "ros2_control_hardware_type", "sim_ignition"
+        ),
+    )
+
+    # Clock Bridge
+    sim_clock_bridge = Node(
+        package="ros_gz_bridge",
+        executable="parameter_bridge",
+        arguments=["/clock@rosgraph_msgs/msg/Clock[ignition.msgs.Clock"],
+        output="screen",
+        condition=LaunchConfigurationEquals(
+            "ros2_control_hardware_type", "sim_ignition"
+        ),
     )
 
     load_controllers = []
     for controller in [
+        "joint_state_broadcaster",
         "panda_arm_controller",
         "panda_hand_controller",
-        "joint_state_broadcaster",
     ]:
         load_controllers += [
             ExecuteProcess(
-                cmd=["ros2 run controller_manager spawner {}".format(controller)],
+                cmd=["ros2 control load_controller --set-state active {}".format(controller)],
                 shell=True,
                 output="log",
             )
@@ -100,6 +174,27 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            ros2_control_hardware_type,
+            declare_use_sim_time_cmd,
+            declare_initial_positions_file,
+            sim_clock_bridge,
+            # Launch gazebo environment
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    [
+                        os.path.join(
+                            get_package_share_directory("ros_gz_sim"),
+                            "launch",
+                            "gz_sim.launch.py",
+                        )
+                    ]
+                ),
+                launch_arguments=[("gz_args", [" -r -v 4 empty.sdf"])],
+                condition=LaunchConfigurationEquals(
+                    "ros2_control_hardware_type", "sim_ignition"
+                ),
+            ),
+            ignition_spawn_entity,
             example_file,
             moveit_py_node,
             robot_state_publisher,

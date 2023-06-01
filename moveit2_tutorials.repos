@@ -21,8 +21,8 @@ repositories:
     version: main
   moveit_resources:
     type: git
-    url: https://github.com/ros-planning/moveit_resources
-    version: ros2
+    url: https://github.com/henningkayser/moveit_resources
+    version: panda_gz
   moveit_msgs:
     type: git
     url: https://github.com/ros-planning/moveit_msgs

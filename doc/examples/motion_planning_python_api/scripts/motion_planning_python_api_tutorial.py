@@ -50,12 +50,12 @@ def plan_and_execute(
     time.sleep(sleep_time)
 
 
-def main():
+def main(args=None):
 
     ###################################################################
     # MoveItPy Setup
     ###################################################################
-    rclpy.init()
+    rclpy.init(args=args)
     logger = get_logger("moveit_py.pose_goal")
 
     # instantiate MoveItPy instance and get planning component
