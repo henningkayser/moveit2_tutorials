@@ -12,7 +12,7 @@ RUN apt-get update && apt-get upgrade -y && rosdep update
 
 # Install packages required to run the demo
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ros-humble-moveit \
+    # ros-humble-moveit \
     wget \
     python3-pip
 
@@ -21,6 +21,8 @@ RUN mkdir -p /root/moveit_ws/src
 WORKDIR /root/moveit_ws/src
 RUN git clone -b panda_gz --depth 1 --single-branch https://github.com/henningkayser/moveit_resources.git
 RUN git clone -b panda_gz --depth 1 --single-branch https://github.com/henningkayser/moveit2_tutorials.git
+#TODO(henningkayser) remove when #2222 and #2223 are merged
+RUN git clone -b panda_gz --depth 1 --single-branch https://github.com/henningkayser/moveit2.git
 # COPY ./ moveit2_tutorials
 WORKDIR /root/moveit_ws
 # hadolint ignore=SC1091
