@@ -76,8 +76,7 @@ def generate_launch_description():
         arguments=[
             "--ros-args",
             "--log-level",
-            "fatal",
-        ],  # MoveIt is spamming the log because of unknown '*_mimic' joints
+            "info"],
         parameters=[moveit_config_dict],
     )
 
