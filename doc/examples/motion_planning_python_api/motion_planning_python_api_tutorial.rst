@@ -415,7 +415,7 @@ You can run these service targets like this:
 
 .. code-block:: bash
 
-  docker compose up demo_gazebo
+  docker compose up python_gazebo
 
 All targets are available with the optional postfix ``*_gpu`` which might be required depending on the installed System, GPU Vendor and drivers. 
                
